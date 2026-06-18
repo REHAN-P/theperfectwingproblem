@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Perfect Wing Problem | MCV4UT-04</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Playfair+Display:ital,wght@0,700;1,600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0d1117;--bg2:#151b23;--card:#161b22;--card2:#1c2333;--border:#30363d;--text:#e6edf3;--muted:#8b949e;--blue:#58a6ff;--gold:#d29922;--gold-l:#e3b341;--red:#f85149;--green:#3fb950;--r:12px;--r2:8px}
+.gold-theme{--bg:#1f1208;--bg2:#2d1a0c;--card:#341e0e;--card2:#3d2614;--border:#8a6a30;--text:#f5e6c8;--muted:#d4b87a;--blue:#f0c040;--gold:#f0b800;--gold-l:#ffd700;--red:#e8a040;--green:#b8d040}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:16px;-webkit-font-smoothing:antialiased;padding-top:56px;overflow-x:hidden;cursor:auto}
+body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:0;background-image:
+  linear-gradient(rgba(88,166,255,.02) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(88,166,255,.02) 1px,transparent 1px);
+  background-size:60px 60px}
+@keyframes float1{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-35px) rotate(4deg)}}
+@keyframes float2{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-25px) rotate(-3deg)}}
+@keyframes float3{0%,100%{transform:translateY(0) rotate(0deg)}50%{transform:translateY(-20px) rotate(5deg)}}
+@keyframes float4{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(25px,-15px) rotate(-2deg)}}
+@keyframes float5{0%,100%{transform:translate(0,0) rotate(0deg)}50%{transform:translate(-15px,-20px) rotate(3deg)}}
+@keyframes wind{0%{transform:translateX(-100%)}100%{transform:translateX(100vw)}}
+.bg-deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.bg-deco .plane{position:absolute;opacity:.045;animation-timing-function:ease-in-out;animation-iteration-count:infinite}
+.bg-deco .p1{top:8%;left:2%;width:80px;animation-name:float1;animation-duration:20s}
+.bg-deco .p2{top:30%;right:5%;width:60px;animation-name:float2;animation-duration:24s}
+.bg-deco .p3{top:60%;left:4%;width:70px;animation-name:float3;animation-duration:18s}
+.bg-deco .p4{top:82%;right:8%;width:50px;animation-name:float4;animation-duration:22s}
+.bg-deco .p5{top:45%;left:80%;width:55px;animation-name:float5;animation-duration:26s}
+.bg-deco .wl{position:absolute;height:1px;background:linear-gradient(90deg,transparent,rgba(88,166,255,.06),transparent);animation:wind 12s linear infinite}
+.bg-deco .wl:nth-child(11){top:15%;width:320px;animation-delay:-2s;animation-duration:14s}
+.bg-deco .wl:nth-child(12){top:35%;width:200px;animation-delay:-5s;animation-duration:17s}
+.bg-deco .wl:nth-child(13){top:52%;width:280px;animation-delay:-9s;animation-duration:12s}
+.bg-deco .wl:nth-child(14){top:68%;width:240px;animation-delay:-13s;animation-duration:16s}
+.bg-deco .wl:nth-child(15){top:85%;width:180px;animation-delay:-6s;animation-duration:19s}
+#wind-canvas{position:fixed;inset:0;z-index:0;pointer-events:none;width:100%;height:100%}
+#game-overlay{position:fixed;inset:0;z-index:500;background:rgba(0,0,0,.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center}
+#game-overlay.open{display:flex}
+#game-wrap{background:#0d1117;border:1px solid #30363d;border-radius:14px;padding:16px;position:relative;box-shadow:0 0 60px rgba(88,166,255,.12),0 24px 80px rgba(0,0,0,.6)}
+#game-wrap canvas{display:block;border-radius:8px;width:360px;height:480px}
+#game-wrap .g-close{position:absolute;top:8px;right:12px;background:rgba(255,255,255,.05);border:1px solid #30363d;border-radius:50%;color:var(--muted);font-size:1.2rem;cursor:pointer;z-index:2;line-height:1;width:30px;height:30px;display:flex;align-items:center;justify-content:center;transition:all .15s}
+#game-wrap .g-close:hover{color:#fff;background:rgba(232,81,73,.2);border-color:#f85149}
+#game-score{position:absolute;top:24px;left:50%;transform:translateX(-50%);color:#fff;font-size:2.2rem;font-weight:800;font-family:'Inter',sans-serif;text-shadow:0 2px 12px rgba(0,0,0,.7);z-index:1;pointer-events:none;letter-spacing:1px}
+#game-start{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);color:#fff;font-size:.95rem;font-weight:600;font-family:'Inter',sans-serif;background:rgba(88,166,255,.12);border:1px solid rgba(88,166,255,.4);padding:12px 28px;border-radius:10px;z-index:1;pointer-events:none;text-align:center;backdrop-filter:blur(4px)}
+.container{max-width:1100px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+nav{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(13,17,23,.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 24px;height:56px;display:flex;align-items:center;justify-content:space-between}
+nav .logo{font-weight:700;font-size:.95rem;color:var(--text);text-decoration:none}
+nav .logo span{color:var(--blue)}
+nav .links{display:flex;gap:24px}
+nav .links a{color:var(--muted);text-decoration:none;font-size:.85rem;font-weight:500;transition:color .15s;padding:4px 0}
+nav .links a:hover{color:var(--text)}
+.dropdown{position:relative;display:flex;align-items:center;gap:2px}
+.drop-arrow{cursor:pointer;color:var(--muted);font-size:.7rem;padding:4px 2px;transition:color .15s;user-select:none;line-height:1}
+.drop-arrow:hover{color:var(--text)}
+.drop-menu{display:none;position:absolute;top:100%;left:50%;transform:translateX(-50%);background:var(--card);border:1px solid var(--border);border-radius:10px;padding:6px;min-width:300px;box-shadow:0 16px 48px rgba(0,0,0,.6);z-index:300}
+.drop-menu.show{display:block}
+.drop-menu a{display:block;padding:8px 14px;color:var(--text);text-decoration:none;font-size:.82rem;border-radius:6px;transition:background .12s;white-space:nowrap}
+.drop-menu a:hover{background:var(--bg2);color:var(--blue)}
+.hero{text-align:center;padding:56px 0 32px;position:relative}
+.hero h1{font-size:2.6rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-bottom:6px}
+.hero .sub{font-size:1.05rem;color:var(--muted);margin-bottom:10px}
+.hero .tag{display:inline-block;background:rgba(210,153,34,.12);color:var(--gold-l);padding:3px 14px;border-radius:20px;font-size:.78rem;font-weight:500}
+.about{background:linear-gradient(135deg,var(--card) 55%,#181f2e 100%);border:1px solid var(--border);border-radius:var(--r);padding:36px 40px;margin:0 0 32px;position:relative;overflow:hidden}
+.about::before{content:'';position:absolute;top:-60px;right:-60px;width:280px;height:280px;background:radial-gradient(circle,rgba(88,166,255,.07) 0%,transparent 70%);pointer-events:none;border-radius:50%}
+.about h2{font-family:'Playfair Display',Georgia,serif;font-size:1.7rem;font-weight:700;margin-bottom:6px;color:var(--text);letter-spacing:-.01em}
+.about h2::after{content:'';display:block;width:56px;height:3px;background:linear-gradient(90deg,var(--gold),var(--gold-l));margin-top:10px;margin-bottom:18px;border-radius:3px}
+.about .about-grid{display:grid;grid-template-columns:1fr 260px;gap:32px;align-items:start;position:relative;z-index:1}
+.about .about-text p{font-size:.95rem;color:var(--muted);margin-bottom:12px;line-height:1.75}
+.about .about-text p:last-child{margin-bottom:0}
+.about .about-media{display:flex;flex-direction:column;gap:14px}
+.about .about-media img{width:100%;border-radius:10px;border:1px solid var(--border);object-fit:cover;transition:transform .3s ease,box-shadow .3s ease;box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.about .about-media img:hover{transform:scale(1.02);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+@media(max-width:768px){.about .about-grid{grid-template-columns:1fr}.about{padding:24px 20px}}
+.problem{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:32px 36px;margin:0 0 24px;position:relative}
+.problem::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--gold),var(--blue));border-radius:var(--r) var(--r) 0 0}
+.problem h2{font-family:'Playfair Display',Georgia,serif;font-size:1.4rem;font-weight:700;margin-bottom:4px}
+.problem h2 span{color:var(--gold-l)}
+.problem .q{font-size:.93rem;color:var(--muted);line-height:1.7;margin:10px 0}
+.problem .q strong{color:var(--text)}
+.problem .formula-box{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin:12px 0;text-align:center}
+.problem .formula-box .math-block{margin:4px 0}
+.problem-grid{display:grid;grid-template-columns:1fr 240px;gap:20px;align-items:start}
+.problem-media svg{width:100%;height:auto;border-radius:6px;display:block}
+.plot-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:6px;margin:12px 0}
+.plot-wrap svg{width:100%;height:auto;display:block;border-radius:4px}
+@media(max-width:768px){.problem-grid{grid-template-columns:1fr}}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding:0 0 40px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--r);padding:0;cursor:pointer;transition:transform .25s cubic-bezier(.22,.61,.36,1),box-shadow .25s ease,border-color .25s;overflow:hidden;position:relative;outline:none}
+.card:focus-visible{box-shadow:0 0 0 2px var(--blue)}
+.card:hover{transform:translateY(-4px) scale(1.01);box-shadow:0 12px 40px rgba(0,0,0,.5);border-color:#484f58}
+.card:active{transform:translateY(-1px) scale(.99)}
+.card-thumb{height:120px;background:var(--bg2);display:flex;align-items:center;justify-content:center;border-bottom:1px solid var(--border);overflow:hidden}
+.card-thumb svg{width:80px;height:80px;opacity:.7}
+.card-body{padding:20px 18px;display:flex;align-items:center;justify-content:center;min-height:80px}
+.card h3{font-size:1rem;font-weight:600;line-height:1.4;text-align:center;margin:0}
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.7);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:24px;animation:fadeIn .2s ease}
+.modal-overlay.open{display:flex}
+.modal{background:var(--card);border:1px solid var(--border);border-radius:14px;max-width:820px;width:100%;max-height:85vh;overflow-y:auto;padding:36px 40px 32px;position:relative;animation:modalIn .25s cubic-bezier(.22,.61,.36,1);box-shadow:0 24px 80px rgba(0,0,0,.6)}
+.modal-close{position:absolute;top:14px;right:18px;background:var(--bg2);border:1px solid var(--border);color:var(--muted);width:34px;height:34px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.1rem;transition:background .15s,color .15s;z-index:2}
+.modal-close:hover{background:var(--border);color:var(--text)}
+.modal h2{font-size:1.3rem;font-weight:700;margin-bottom:14px;padding-right:32px}
+.modal .section-body>*:last-child{margin-bottom:0}
+.modal .section-body p{margin-bottom:18px}
+.modal .section-body h3{margin-top:24px;margin-bottom:12px}
+.modal .figure{margin:16px 0}
+.modal .figure img{max-width:100%;border-radius:6px;display:block;margin:0 auto;max-height:240px;object-fit:cover}
+.modal .figure svg{max-width:100%}
+.modal .interactive-card{margin:12px 0}
+.modal .math-block{margin:12px 0}
+.modal table{font-size:.85rem;margin:12px 0}
+.modal th,td{padding:6px 10px}
+.modal .def{padding:12px 16px;margin:12px 0}
+.modal blockquote{margin:12px 0;padding:10px 16px}
+.modal .rbox-out{padding:10px 16px;margin:12px 0}
+.modal .steps li{padding:8px 0 8px 38px}
+.modal .steps li::before{width:24px;height:24px;font-size:.72rem;top:8px}
+footer{background:var(--card);border-top:1px solid var(--border);padding:32px 0 28px;margin-top:10px}
+footer .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:24px}
+footer h4{font-size:.82rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px}
+footer p{font-size:.8rem;color:var(--muted);margin-bottom:4px;padding-left:28px;text-indent:-28px}
+footer a{color:var(--blue);font-size:.8rem}
+footer a:hover{color:var(--gold-l)}
+footer .copy{text-align:center;margin-top:20px;font-size:.78rem;color:var(--muted);padding-top:16px;border-top:1px solid var(--border)}
+.section-store{display:none}
+.fade-up{opacity:0;transform:translateY(20px);transition:opacity .5s ease,transform .5s ease}
+.fade-up.visible{opacity:1;transform:translateY(0)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalIn{from{opacity:0;transform:scale(.92) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.rgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin:10px 0}
+.rbox{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:7px 10px;text-align:center}
+.rbox .lbl{font-size:.62rem;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.3px}
+.rbox .val{font-size:1rem;font-weight:700;margin-top:1px}
+.rbox .val.gold{color:var(--gold-l)}.rbox .val.blue{color:var(--blue)}.rbox .val.red{color:var(--red)}
+.interactive-card{background:linear-gradient(145deg,#1c2333,#151b22);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;margin:12px 0;position:relative}
+.interactive-card .badge{position:absolute;top:-8px;right:14px;background:var(--gold);color:#000;font-size:.55rem;font-weight:700;padding:2px 8px;border-radius:6px;letter-spacing:.6px}
+.interactive-card h3{margin:0 0 10px;font-size:.92rem}
+.interactive-card .controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:8px 0}
+.interactive-card .cg{flex:1;min-width:110px}
+.interactive-card label{display:block;font-size:.7rem;font-weight:600;color:var(--muted);margin-bottom:2px;text-transform:uppercase;letter-spacing:.3px}
+.interactive-card input[type=range]{width:100%;height:3px;-webkit-appearance:none;appearance:none;background:var(--border);border-radius:2px;outline:none;cursor:pointer}
+.interactive-card input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:14px;height:14px;border-radius:50%;background:var(--blue);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.4);cursor:pointer;transition:transform .12s}
+.interactive-card input[type=range]::-webkit-slider-thumb:hover{transform:scale(1.15)}
+.interactive-card input[type=range]::-moz-range-thumb{width:14px;height:14px;border-radius:50%;background:var(--blue);border:2px solid #fff}
+.val{font-weight:700}
+.val .u{font-weight:400;color:var(--muted);font-size:.8rem}
+.steps{counter-reset:step;list-style:none;margin:0 0 12px;padding:0}
+.steps li{counter-increment:step;padding:8px 0 8px 38px;position:relative;margin-bottom:5px}
+.steps li::before{content:counter(step);position:absolute;left:0;top:8px;width:24px;height:24px;background:#1f6feb;color:#fff;border-radius:50%;font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center}
+.def{background:var(--bg2);border-left:3px solid var(--blue);padding:12px 16px;margin:12px 0;border-radius:0 6px 6px 0}
+.def p{margin:0 0 3px;font-size:.9rem}
+blockquote{border-left:3px solid var(--gold);padding:10px 16px;margin:14px 0;background:rgba(210,153,34,.06);border-radius:0 6px 6px 0;font-style:italic;color:#ccc;font-size:.9rem}
+blockquote cite{display:block;margin-top:4px;font-size:.78rem;color:var(--muted);font-style:normal}
+table{width:100%;border-collapse:collapse;margin:12px 0;font-size:.85rem}
+th,td{border:1px solid var(--border);padding:6px 10px;text-align:left}
+th{background:var(--bg2);font-weight:600}
+tr:nth-child(even){background:rgba(255,255,255,.02)}
+.rbox-out{background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;margin:12px 0;text-align:center;font-size:.95rem}
+.rbox-out .big{font-size:1.3rem;font-weight:700;color:var(--gold-l)}
+.math-block{margin:12px 0;overflow-x:auto;text-align:center;padding:2px 0;font-size:.95rem}
+@media(max-width:640px){
+.hero h1{font-size:1.8rem}
+.card-grid{grid-template-columns:1fr}
+.card-thumb{height:90px}
+.modal{padding:24px 18px;max-height:90vh}
+nav .links{gap:14px}
+}
+</style>
+</head>
+<body>
+<div class="bg-deco">
+  <svg class="plane p1" viewBox="0 0 100 100" fill="#58a6ff"><path d="M50,2 L53,28 L78,15 L82,25 L55,35 L55,42 L72,70 L62,72 L50,52 L38,72 L28,70 L45,42 L45,35 L18,25 L22,15 L47,28 Z" opacity=".8"/><ellipse cx="50" cy="78" rx="14" ry="4" opacity=".5"/><rect x="46" y="6" width="8" height="8" rx="2" opacity=".4"/></svg>
+  <svg class="plane p2" viewBox="0 0 100 100" fill="#58a6ff"><path d="M50,2 L53,28 L78,15 L82,25 L55,35 L55,42 L72,70 L62,72 L50,52 L38,72 L28,70 L45,42 L45,35 L18,25 L22,15 L47,28 Z" opacity=".8"/><ellipse cx="50" cy="78" rx="14" ry="4" opacity=".5"/><rect x="46" y="6" width="8" height="8" rx="2" opacity=".4"/></svg>
+  <svg class="plane p3" viewBox="0 0 100 100" fill="#e3b341"><path d="M50,2 L53,28 L78,15 L82,25 L55,35 L55,42 L72,70 L62,72 L50,52 L38,72 L28,70 L45,42 L45,35 L18,25 L22,15 L47,28 Z" opacity=".8"/><ellipse cx="50" cy="78" rx="14" ry="4" opacity=".5"/><rect x="46" y="6" width="8" height="8" rx="2" opacity=".4"/></svg>
+  <svg class="plane p4" viewBox="0 0 100 100" fill="#58a6ff"><path d="M50,2 L53,28 L78,15 L82,25 L55,35 L55,42 L72,70 L62,72 L50,52 L38,72 L28,70 L45,42 L45,35 L18,25 L22,15 L47,28 Z" opacity=".8"/><ellipse cx="50" cy="78" rx="14" ry="4" opacity=".5"/><rect x="46" y="6" width="8" height="8" rx="2" opacity=".4"/></svg>
+  <svg class="plane p5" viewBox="0 0 100 100" fill="#e3b341"><path d="M50,2 L53,28 L78,15 L82,25 L55,35 L55,42 L72,70 L62,72 L50,52 L38,72 L28,70 L45,42 L45,35 L18,25 L22,15 L47,28 Z" opacity=".8"/><ellipse cx="50" cy="78" rx="14" ry="4" opacity=".5"/><rect x="46" y="6" width="8" height="8" rx="2" opacity=".4"/></svg>
+  <div class="wl"></div><div class="wl"></div><div class="wl"></div><div class="wl"></div><div class="wl"></div>
+</div>
+<canvas id="wind-canvas"></canvas>
+<nav>
+  <a href="javascript:void(0)" class="logo" id="logo-trigger">&#9662; <span>Perfect</span>Wing</a>
+  <div class="links">
+    <a href="javascript:void(0)" onclick="closeModal();window.scrollTo({top:0,behavior:'smooth'})">Home</a>
+    <a href="javascript:void(0)" onclick="document.querySelector('.about').scrollIntoView({behavior:'smooth'})">Intro</a>
+    <div class="dropdown">
+      <a href="javascript:void(0)" onclick="var e=document.querySelector('.card-grid');window.scrollTo({top:e.getBoundingClientRect().top+window.scrollY-56,behavior:'smooth'});closeDropdown()">Contents</a>
+      <span class="drop-arrow" onclick="event.stopPropagation();document.querySelector('.drop-menu').classList.toggle('show')">&#9662;</span>
+      <div class="drop-menu" onclick="event.stopPropagation()">
+        <a href="javascript:void(0)" onclick="openSection('s2');closeDropdown()">What does a wing do?</a>
+        <a href="javascript:void(0)" onclick="openSection('s1');closeDropdown()">What is the Perfect Wing Problem?</a>
+        <a href="javascript:void(0)" onclick="openSection('s4');closeDropdown()">What's being maximized?</a>
+        <a href="javascript:void(0)" onclick="openSection('s3');closeDropdown()">Angle of Attack Simulator</a>
+        <a href="javascript:void(0)" onclick="openSection('s6');closeDropdown()">The Perfect Wing Problem</a>
+        <a href="javascript:void(0)" onclick="openSection('s9');closeDropdown()">Conclusion</a>
+      </div>
+    </div>
+    <a href="javascript:void(0)" onclick="document.querySelector('footer').scrollIntoView({behavior:'smooth'})">Sources</a>
+  </div>
+</nav>
+<div class="container">
+<header class="hero">
+  <h1>The Perfect Wing Problem</h1>
+  <p class="sub">a MCV4UT-04 Calculus &amp; Vectors Project</p>
+  <span class="tag">by Rehan Patwa</span>
+</header>
+<section class="about" id="about">
+  <h2>Introduction</h2>
+  <div class="about-grid">
+    <div class="about-text">
+      <p>For my MCV4U culminating assessment, I was tasked to research and create my own optimization problem using the ideas and techniques we learned in this course. Since I have an interest in aerospace, aviation, and engineering, I wanted to choose a topic that connects real world aircraft designs with the type of calculus we study in Grade 12. After looking into different possibilities, I decided to focus on something that is important in aviation but can also relate to grade 12 calculus optimization problems, which is finding the most efficient angle of attack for an airplane wing. It's more commonly called the "Perfect Wing" problem and this idea comes from real aerodynamics research, where engineers study how a wing's angle of attack affects the lift it produces and the drag it goes through.</p>
+      <p>Through my research, I learned that the lift to drag ratio is one of the most important measurements of how well a wing performs, especially during cruising flight. A higher lift to drag ratio means the aircraft can fly farther while using less fuel, which is a major goal for aerospace engineers to achieve when designing aircrafts. I also learned that lift and drag do not increase at the same rate as the angle of attack changes. Lift increases in a mostly linear way, while drag increases way faster. This creates a sweet spot where the wing is most efficient. Engineers typically use advanced physics and calculus to find this point, but I will simplify the relationships so they fit within Grade 12 calculus while still staying pretty realistic.</p>
+      <p>To turn this into my own high-school-level optimization problem, I will use simplified equations for lift and drag that still show the same behaviour as real wings. This lets me use the derivative rules we learned in class to find the angle that gives the best lift to drag ratio. My goal is to show how calculus can be used to solve a real engineering problem in a way that is understandable to grade 12 students.</p>
+    </div>
+    <div class="about-media">
+      <img src="https://images.unsplash.com/photo-1517976547714-720226b864c1?w=400&q=80" alt="Aerospace engineering" loading="lazy">
+      <img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=400&q=80" alt="Airplane wing" loading="lazy">
+      <img src="https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=400&q=80" alt="Calculus" loading="lazy">
+    </div>
+  </div>
+</section>
+<section class="problem" id="problem">
+  <h2><span>The</span> Problem</h2>
+  <div class="problem-grid">
+    <div>
+      <p class="q">A small propeller plane is cruising at constant speed. The pilot can adjust the angle of attack $\alpha$ of the wing, affecting the lift and drag forces. Engineers measure wing efficiency using the <strong>lift-to-drag ratio</strong>.</p>
+      <p class="q">The lift and drag forces (in N) are modeled by:<br>
+      $L(\alpha)=120\alpha \qquad D(\alpha)=15\alpha^{2}+200$<br>
+      where $\alpha$ is in degrees. The efficiency ratio is:</p>
+      <div class="formula-box">
+        <div class="math-block">$$R(\alpha)=\frac{L(\alpha)}{D(\alpha)}=\frac{120\alpha}{15\alpha^{2}+200}$$</div>
+      </div>
+      <p class="q"><strong>Determine the angle of attack $\alpha$ that maximizes $R(\alpha)$. Show all work.</strong></p>
+    </div>
+    <div class="problem-media">
+      <svg viewBox="0 0 200 180" fill="none">
+        <rect x="0" y="0" width="200" height="180" rx="4" fill="#151b23"/>
+        <path d="M20,100 L180,100" stroke="#8b949e" stroke-width="1.2" stroke-dasharray="4,3"/>
+        <path d="M20,100 L80,80 L120,60 L170,40" stroke="#58a6ff" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M80,80 L90,95 L130,110" stroke="#8b949e" stroke-width="1" stroke-dasharray="2,2" fill="none"/>
+        <line x1="55" y1="98" x2="75" y2="82" stroke="#e3b341" stroke-width="1.5"/>
+        <line x1="55" y1="98" x2="55" y2="82" stroke="#e3b341" stroke-width="1.5" opacity=".5"/>
+        <path d="M55,98 A16,16 0 0,0 61,87" fill="none" stroke="#e3b341" stroke-width="1.2"/>
+        <text x="48" y="84" font-size="8" fill="#e3b341" font-weight="700">&#945;</text>
+        <text x="55" y="112" font-size="6" fill="#8b949e">horizontal</text>
+        <line x1="170" y1="40" x2="170" y2="25" stroke="#f85149" stroke-width="1.2"/>
+        <text x="162" y="22" font-size="6" fill="#f85149">L</text>
+        <line x1="130" y1="110" x2="130" y2="125" stroke="#f85149" stroke-width="1.2"/>
+        <text x="126" y="132" font-size="6" fill="#f85149">D</text>
+      </svg>
+    </div>
+  </div>
+</section>
+<div class="card-grid" id="cards">
+
+<div class="card fade-up" data-section="s2" tabindex="0" onclick="openSection('s2')" onkeydown="if(event.key==='Enter')openSection('s2')">
+  <div class="card-body">
+    <h3>What does a wing do?</h3>
+  </div>
+</div>
+
+<div class="card fade-up" data-section="s1" tabindex="0" onclick="openSection('s1')" onkeydown="if(event.key==='Enter')openSection('s1')">
+  <div class="card-body">
+    <h3>What is the Perfect Wing Problem?</h3>
+  </div>
+</div>
+
+<div class="card fade-up" data-section="s4" tabindex="0" onclick="openSection('s4')" onkeydown="if(event.key==='Enter')openSection('s4')">
+  <div class="card-body">
+    <h3>What's being maximized?</h3>
+  </div>
+</div>
+
+<div class="card fade-up" data-section="s3" tabindex="0" onclick="openSection('s3')" onkeydown="if(event.key==='Enter')openSection('s3')">
+  <div class="card-body">
+    <h3>Angle of Attack Simulator</h3>
+  </div>
+</div>
+
+<div class="card fade-up" data-section="s6" tabindex="0" onclick="openSection('s6')" onkeydown="if(event.key==='Enter')openSection('s6')">
+  <div class="card-body">
+    <h3>The Perfect Wing Problem</h3>
+  </div>
+</div>
+
+<div class="card fade-up" data-section="s9" tabindex="0" onclick="openSection('s9')" onkeydown="if(event.key==='Enter')openSection('s9')">
+  <div class="card-body">
+    <h3>Conclusion</h3>
+  </div>
+</div>
+
+</div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modal-content">
+    <button class="modal-close" onclick="closeModal()">&times;</button>
+    <div id="modal-body"></div>
+  </div>
+</div>
+
+<div class="section-store" id="s1">
+<h2>What is the Perfect Wing Problem?</h2>
+<p>The Perfect Wing Problem is a classic optimization question used in aerodynamics that finds at what angle of attack is an airplane wing most efficient. It's about finding the exact angle where the wing produces the most lift while creating the least drag. This angle is important because it represents the point where the wing is doing its job in the most efficient way possible.</p>
+<div class="figure"><img src="https://images.unsplash.com/photo-1542296332-2e4473faf563?w=740&q=80" alt="Wing" loading="lazy" style="max-height:240px;object-fit:cover;width:100%"></div>
+<p>The reason this problem is very popular is because it uses the ideas of optimization in aviation using a model that is simple enough to study but realistic enough to use. Lift and drag don't increase at the same rate and because of this difference, there is always one angle where the ratio between them reaches a maximum. That angle is what pilots and engineers need, and it's what calculus is used to find.</p>
+
+</div>
+
+<div class="section-store" id="s2">
+<h2>What does a wing do?</h2>
+<p>An airplane wing is a machine designed to create <strong>lift</strong>, which is the upward force that makes an airplane fly off the ground and stay in the air. When the plane moves forward, air flows over and under the wing. Because of the wing's curved shape, the air on top moves faster than the air underneath, creating lower pressure above the wing and higher pressure below it. This pressure difference produces lift. Without enough lift, a plane cannot take off or stay airborne.</p>
+<div class="figure">
+<svg viewBox="0 0 580 260" width="580" height="260">
+<rect x="0" y="0" width="580" height="260" fill="#151b23" rx="6"/>
+<defs><marker id="m2" markerWidth="6" markerHeight="4" refX="6" refY="2" orient="auto"><path d="M0,0 L6,2 L0,4 Z" fill="#f85149"/></marker></defs>
+<path d="M32,78 Q180,20 320,60 Q430,92 540,72" stroke="#58a6ff" stroke-width="1.8" fill="none" opacity=".4" stroke-dasharray="4,3"/>
+<path d="M32,182 Q180,220 320,190 Q430,162 540,182" stroke="#3fb950" stroke-width="1.8" fill="none" opacity=".4" stroke-dasharray="4,3"/>
+<path d="M120,130 L320,90 Q360,84 380,88 Q430,96 470,130 L320,130 Z" fill="#1c2333" stroke="#58a6ff" stroke-width="1.5"/>
+<path d="M100,130 L120,130 L470,130 L490,130" stroke="#8b949e" stroke-width="1.2" stroke-dasharray="4,3"/>
+<line x1="100" y1="130" x2="100" y2="80" stroke="#f85149" stroke-width="1.5"/>
+<text x="92" y="74" font-size="10" fill="#f85149" font-weight="600">Lift</text>
+<line x1="490" y1="130" x2="510" y2="155" stroke="#e3b341" stroke-width="1.5"/>
+<text x="512" y="164" font-size="10" fill="#e3b341" font-weight="600">Drag</text>
+<text x="44" y="76" font-size="8" fill="#58a6ff">fast air / low pressure</text>
+<text x="44" y="196" font-size="8" fill="#3fb950">slow air / high pressure</text>
+<line x1="26" y1="226" x2="100" y2="226" stroke="#f85149" stroke-width="1.5" marker-end="url(#m2)"/>
+<text x="28" y="246" font-size="10" fill="#f85149" font-weight="600">Relative Wind</text>
+</svg>
+</div>
+<p>At the same time, the wing also experiences <strong>drag</strong>, which is the air resistance against the aircraft as it moves forward. Drag works against the plane's motion and makes the engines work harder. Too much drag wastes fuel and reduces efficiency, so engineers try to design wings that create a lot of lift while keeping drag as low as possible.</p>
+<h3>Angle of Attack</h3>
+<p>A major variable that affects both lift and drag is the <strong>angle of attack</strong>, which is the angle between the wing and the oncoming airflow. When the angle of attack increases, the wing hits the air straight on. This usually causes lift to increase at a steady rate but drag increases much faster so if the angle becomes too high, the airflow can no longer stay attached to the wing, causing a <strong>stall</strong>.</p>
+<h3>Lift-to-Drag Ratio</h3>
+<p>To measure how efficiently a wing is performing, engineers use the <strong>lift to drag ratio</strong>. This ratio compares how much lift the wing produces to how much drag it experiences. A higher lift to drag ratio means the wing is producing a strong upward force while losing less energy to air resistance. This is important for fuel efficiency during long flights. Pilots and engineers try to fly at or close to the angle of attack that gives the maximum lift to drag ratio, because that is where the wing is working at its best.</p>
+</div>
+
+<div class="section-store" id="s3">
+<h2>Angle of Attack Simulator</h2>
+<p>Drag the slider to change $\alpha$ and see lift, drag, and $L/D$ change in real time.</p>
+<div class="interactive-card"><span class="badge">INTERACTIVE</span><h3>Angle of Attack</h3>
+<div class="controls"><div class="cg" style="flex:2"><label>α</label><input type="range" id="aoa-slider" min="0" max="30" value="3.65" step=".01"></div><div class="cg" style="min-width:60px;text-align:center"><label>α</label><span class="val" id="aoa-value" style="font-size:1.2rem">3.65<span class="u">°</span></span></div></div>
+<div class="rgrid"><div class="rbox"><div class="lbl">Lift $L$</div><div class="val blue" id="aoa-lift">438.00 N</div></div><div class="rbox"><div class="lbl">Drag $D$</div><div class="val red" id="aoa-drag">399.84 N</div></div><div class="rbox"><div class="lbl">$L/D$</div><div class="val gold" id="aoa-ratio">1.10</div></div><div class="rbox"><div class="lbl">Max $R$ at</div><div class="val gold" id="aoa-opt">3.65°</div></div></div>
+<div class="figure" style="border:none;padding:0;margin:6px 0 0;background:transparent">
+<svg viewBox="0 0 640 280" width="640" height="280">
+<rect x="0" y="0" width="640" height="280" fill="#151b23" rx="6"/>
+<line x1="50" y1="230" x2="600" y2="230" stroke="#30363d" stroke-width="1" stroke-dasharray="4,4"/>
+<g id="aoa-wing-group" transform="rotate(8,320,230)">
+<line x1="70" y1="230" x2="580" y2="230" stroke="#8b949e" stroke-width="1.5" stroke-dasharray="5,4"/>
+<path d="M70,230 Q160,190 270,214 Q370,236 500,230 Q370,224 270,208 Q160,192 70,230 Z" fill="#1f6feb" stroke="#0d1117" stroke-width="1" opacity=".85"/>
+</g>
+<line x1="15" y1="256" x2="60" y2="256" stroke="#f85149" stroke-width="1.5" opacity=".5"/>
+<line x1="15" y1="268" x2="60" y2="268" stroke="#f85149" stroke-width="1.5" opacity=".5"/>
+<text x="14" y="265" font-size="9" fill="#f85149" transform="rotate(-90,14,265)">Wind</text>
+<path id="aoa-arc" d="M82,230 A18,18 0 0,0 89,243" fill="none" stroke="#e3b341" stroke-width="2"/>
+<text id="aoa-arc-label" x="92" y="250" font-size="12" fill="#e3b341" font-weight="700">8°</text>
+<rect x="430" y="10" width="190" height="64" rx="5" fill="#161b22" stroke="#30363d" stroke-width="1"/>
+<line x1="438" y1="26" x2="462" y2="26" stroke="#8b949e" stroke-width="1.5" stroke-dasharray="4,3"/><text x="468" y="30" font-size="9" fill="#ccc">Chord</text>
+<line x1="438" y1="40" x2="462" y2="40" stroke="#f85149" stroke-width="1.5"/><text x="468" y="44" font-size="9" fill="#ccc">Wind</text>
+<line x1="438" y1="54" x2="462" y2="54" stroke="#e3b341" stroke-width="1.5"/><text x="468" y="58" font-size="9" fill="#ccc">$\alpha$</text>
+</svg></div></div>
+</div>
+
+<div class="section-store" id="s4">
+<h2>What's being maximized?</h2>
+<p>In this optimization problem, the quantity being maximized is the lift to drag ratio, which is a measure of how efficiently an airplane wing works at a specific angle of attack.</p>
+<p>The reason we maximize this ratio is that lift and drag do not increase at the same rate when the angle of attack changes. As the angle of attack increases, lift increases in a mostly linear way, but drag increases way faster and curves upward. This means that at low angles, the wing does not produce enough lift, and at high angles, drag becomes too large. Somewhere in between, there is an angle where the wing is working at its highest efficiency. By using calculus to maximize the lift to drag ratio, we can find this exact angle.</p>
+<p>In real aviation, pilots and engineers use this value because it represents the most fuel efficient and aerodynamically effective way for an aircraft to fly during cruise. For this assignment, I used a simplified model of lift and drag that still acts like a realistic enough wing but can be solved with Grade 12 calculus. By maximizing the function</p>
+<div class="math-block">$$R(\alpha)=\frac{L(\alpha)}{D(\alpha)}$$</div>
+<p>I can determine the angle of attack that gives the most efficient aerodynamics.</p>
+</div>
+</div>
+</div>
+</div>
+
+<div class="section-store" id="s6">
+<h2>Optimization with Calculus</h2>
+<p><strong>The Problem:</strong> A wing's lift and drag are modeled by $L(\alpha)=120\alpha$ and $D(\alpha)=15\alpha^{2}+200$ where $\alpha$ is the angle of attack in degrees. The aerodynamic efficiency is the lift-to-drag ratio $R(\alpha)=L/D$. Find the angle $\alpha$ that maximizes $R(\alpha)$.</p>
+
+<ol class="steps">
+<li><strong>Step 1 — Define the Problem</strong>
+<p>We are maximizing the lift-to-drag ratio $R(\alpha)$, which measures how efficiently the wing produces lift relative to the drag it experiences.</p></li>
+
+<li><strong>Step 2 — Function and Domain</strong>
+<div class="math-block">$$R(\alpha)=\frac{120\alpha}{15\alpha^{2}+200},\qquad 0&lt;\alpha&lt;\alpha_{\text{stall}}$$</div>
+<p>The domain is restricted to positive angles below the stall angle (roughly $15^\circ$–$20^\circ$ for typical wings).</p></li>
+
+<li><strong>Step 3 — Differentiate</strong>
+<p>Apply the quotient rule $\displaystyle\left(\frac{u}{v}\right)'=\frac{u'v-uv'}{v^{2}}$ with $u=120\alpha$, $v=15\alpha^{2}+200$:</p>
+<div class="math-block">$$\begin{aligned}
+R'(\alpha)&amp;=\frac{120\,(15\alpha^{2}+200)-120\alpha\,(30\alpha)}{(15\alpha^{2}+200)^{2}}\\[4pt]
+&amp;=\frac{1800\alpha^{2}+24000-3600\alpha^{2}}{(15\alpha^{2}+200)^{2}}\\[4pt]
+&amp;=\frac{24000-1800\alpha^{2}}{(15\alpha^{2}+200)^{2}}
+\end{aligned}$$</div></li>
+
+<li><strong>Step 4 — Critical Numbers</strong>
+<p>Set $R'(\alpha)=0$. The denominator is always positive, so the numerator must be zero:</p>
+<div class="math-block">$$\begin{aligned}
+24000-1800\alpha^{2}&amp;=0\\
+1800\alpha^{2}&amp;=24000\\
+\alpha^{2}&amp;=\frac{24000}{1800}=\frac{40}{3}\\[4pt]
+\alpha^{*}&amp;=\sqrt{\frac{40}{3}}\approx 3.65^\circ
+\end{aligned}$$</div>
+<div class="rbox-out">The only critical point in the domain is $\displaystyle\boxed{\alpha^{*}=\sqrt{\frac{40}{3}}\approx 3.65^\circ}$.</div></li>
+
+<li><strong>Step 5 — Confirm Maximum (Second Derivative Test)</strong>
+<p>Differentiate $R'(\alpha)$. Let $N(\alpha)=24000-1800\alpha^{2}$ and $D(\alpha)=(15\alpha^{2}+200)^{2}$. Then $N'=-3600\alpha$ and $D'=60\alpha(15\alpha^{2}+200)$. Using the quotient rule again:</p>
+<div class="math-block">$$\begin{aligned}
+R''(\alpha)&amp;=\frac{N'D-ND'}{D^{2}}
+\end{aligned}$$</div>
+<p>At $\alpha^{*}$ we have $N(\alpha^{*})=0$, so the $ND'$ term vanishes:</p>
+<div class="math-block">$$\begin{aligned}
+R''(\alpha^{*})&amp;=\frac{-3600\alpha^{*}\,(15\alpha^{*2}+200)^{2}}{(15\alpha^{*2}+200)^{4}}\\[4pt]
+&amp;=\frac{-3600\sqrt{\frac{40}{3}}}{(15\cdot\frac{40}{3}+200)^{2}}\\[4pt]
+&amp;=\frac{-3600\sqrt{\frac{40}{3}}}{(200+200)^{2}}\\[4pt]
+&amp;=\frac{-3600\sqrt{\frac{40}{3}}}{160000}\\[4pt]
+&amp;=-\frac{9}{400}\sqrt{\frac{40}{3}}&lt;0
+\end{aligned}$$</div>
+<p>Since $R''(\alpha^{*})&lt;0$, the function is concave down at the critical point, confirming a <strong>maximum</strong>.</p>
+<div class="rbox-out">The maximum lift-to- drag ratio is $\displaystyle R_{\max}=R(\alpha^{*})\approx 1.10$, achieved at $\displaystyle\boxed{\alpha^{*}=3.65^\circ}$.</div></li>
+</ol>
+
+<p><strong>Conclusion:</strong> At an angle of attack of approximately $3.65^\circ$, the wing produces the highest lift relative to its drag — this is the most aerodynamically efficient cruising angle for the given wing model, meaning the aircraft can fly farthest on the least fuel.</p>
+</div>
+
+<div class="section-store" id="s9">
+<h2>Conclusion</h2>
+<div class="figure"><img src="https://images.unsplash.com/photo-1436491865332-7a61a109cc05?w=740&q=80" alt="Airplane wing" loading="lazy" style="max-height:220px;object-fit:cover;width:100%"></div>
+<p>Through this project, I researched the "Perfect Wing Problem" to figure out when an airplane wing is most efficient. By modeling the lift and drag as functions of the angle of attack and by using the five step optimization process, I found the exact angle where the wing is at its best. Using calculus, I found that the lift to drag ratio is maximized at approximately $3.65^\circ$, meaning the wing produces the most lift for the least drag at this angle.</p>
+<p>Overall, this project showed me how mathematics and engineering are used in the real world and why this course is so important for my future.</p>
+</div>
+
+<div class="section-store" id="s10">
+<h2>Sources</h2>
+<div class="sources">
+<p>Aviation Training Experts. (2026, May 17). <em>Angle of Attack Guide for Pilots | AoA Basics &amp; Safety</em>. Retrieved June 17, 2026, from <a href="https://www.aviationtrainingexperts.com/article/angle-of-attack-guide" target="_blank">https://www.aviationtrainingexperts.com/article/angle-of-attack-guide</a></p>
+<p>NASA. (2025, September 3). <em>Aerodynamic Forces | Glenn Research Center | NASA</em>. Glenn Research Center. Retrieved June 17, 2026, from <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/aerodynamic-forces/" target="_blank">https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/aerodynamic-forces/</a></p>
+<p>True Geometry. (2024, August 30). <em>Calculating Angle of Attack for Maximum Lift-to-Drag Ratio in context of best angle of attack calculator for airfoils | True Geometry's Blog</em>. Retrieved June 17, 2026, from <a href="https://blog.truegeometry.com/tutorials/education/c326f000509babe5930937c8e3b09089/JSON_TO_ARTCL_Calculating_Angle_of_Attack_for_Maximum_Lift_to_Drag_Ratio_in_cont.html" target="_blank">https://blog.truegeometry.com/tutorials/education/c326f000509babe5930937c8e3b09089/JSON_TO_ARTCL_Calculating_Angle_of_Attack_for_Maximum_Lift_to_Drag_Ratio_in_cont.html</a></p>
+<p>Wikipedia. (n.d.). <em>Angle of attack</em>. In <em>Wikipedia</em>. Retrieved June 17, 2026, from <a href="https://en.wikipedia.org/wiki/Angle_of_attack" target="_blank">https://en.wikipedia.org/wiki/Angle_of_attack</a></p>
+<p>Wikipedia. (n.d.). <em>Lift-to-drag ratio</em>. In <em>Wikipedia</em>. Retrieved June 17, 2026, from <a href="https://en.wikipedia.org/wiki/Lift-to-drag_ratio" target="_blank">https://en.wikipedia.org/wiki/Lift-to-drag_ratio</a></p>
+<p>Woodford, C. (2025, March 11). <em>How planes work | the science of flight</em>. Explain that Stuff. Retrieved June 17, 2026, from <a href="https://www.explainthatstuff.com/howplaneswork.html" target="_blank">https://www.explainthatstuff.com/howplaneswork.html</a></p>
+</div>
+</div>
+
+<footer>
+<div class="container">
+<div class="grid">
+<div>
+<h4>Sources</h4>
+<p>Aviation Training Experts (2026, May 17). <em>Angle of Attack Guide for Pilots | AoA Basics &amp; Safety</em>. <a href="https://www.aviationtrainingexperts.com/article/angle-of-attack-guide" target="_blank">Link</a></p>
+<p>NASA (2025, September 3). <em>Aerodynamic Forces | Glenn Research Center | NASA</em>. Glenn Research Center. <a href="https://www1.grc.nasa.gov/beginners-guide-to-aeronautics/aerodynamic-forces/" target="_blank">Link</a></p>
+<p>True Geometry (2024, August 30). <em>Calculating Angle of Attack for Maximum Lift-to-Drag Ratio in context of best angle of attack calculator for airfoils | True Geometry's Blog</em>. <a href="https://blog.truegeometry.com/tutorials/education/c326f000509babe5930937c8e3b09089/JSON_TO_ARTCL_Calculating_Angle_of_Attack_for_Maximum_Lift_to_Drag_Ratio_in_cont.html" target="_blank">Link</a></p>
+<p>Wikipedia (n.d.). <em>Angle of attack</em>. In <em>Wikipedia</em>. <a href="https://en.wikipedia.org/wiki/Angle_of_attack" target="_blank">Link</a></p>
+<p>Wikipedia (n.d.). <em>Lift-to-drag ratio</em>. In <em>Wikipedia</em>. <a href="https://en.wikipedia.org/wiki/Lift-to-drag_ratio" target="_blank">Link</a></p>
+<p>Woodford, C. (2025, March 11). <em>How planes work | the science of flight</em>. Explain that Stuff. <a href="https://www.explainthatstuff.com/howplaneswork.html" target="_blank">Link</a></p>
+</div>
+<div>
+<h4>Course</h4>
+<p>MCV4UT-04</p>
+<p>Calculus &amp; Vectors</p>
+<p>2026</p>
+</div>
+</div>
+<div class="copy">The Perfect Wing Problem &middot; by Rehan Patwa</div>
+</div>
+</footer>
+
+<div id="game-overlay">
+  <div id="game-wrap">
+    <button class="g-close" onclick="closeGame()">&times;</button>
+    <canvas id="g-c" width="360" height="480"></canvas>
+    <div id="game-score">0</div>
+    <div id="game-start">tap to fly</div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+const D=Math.PI/180,TO=180/Math.PI;
+window.openSection=function(id){
+  const store=document.getElementById(id);
+  if(!store)return;
+  document.getElementById('modal-body').innerHTML=store.innerHTML;
+  document.getElementById('modal').classList.add('open');
+  if(window.renderMathInElement)renderMathInElement(document.getElementById('modal-body'),{delimiters:[{left:'$$',right:'$$',display:true},{left:'$',right:'$',display:false}]});
+  setTimeout(initInteractives,50);
+};
+window.closeModal=function(){
+  document.getElementById('modal').classList.remove('open');
+};
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal()});
+document.addEventListener('click',function(e){if(!e.target.closest('.dropdown'))document.querySelector('.drop-menu')&&document.querySelector('.drop-menu').classList.remove('show')});
+window.closeDropdown=function(){document.querySelector('.drop-menu').classList.remove('show')};
+(function(){
+  var seq='',dvdd=null,dvdx=100,dvdy=100,dvdvx=2,dvdvy=2,dvdRun=0,dvdAf=0;
+  var colors=['#f85149','#3fb950','#58a6ff','#e3b341','#bc8cff','#f0883e','#79c0ff','#ff7b72'];
+  function toggleDvd(){
+    if(dvdd){dvdd.remove();dvdd=null;cancelAnimationFrame(dvdAf);dvdRun=0;return}
+    dvdd=document.createElement('div');
+    dvdd.textContent='DVD';
+    dvdd.style.cssText='position:fixed;z-index:9999;font-size:2.4rem;font-weight:800;font-family:helvetica,arial,sans-serif;background:#000;padding:4px 12px;border-radius:4px;pointer-events:none;user-select:none;left:'+dvdx+'px;top:'+dvdy+'px';
+    document.body.appendChild(dvdd);
+    dvdRun=1;dvdx=100;dvdy=100;dvdvx=2;dvdvy=2;
+    var cIdx=0,w=window.innerWidth,h=window.innerHeight;
+    dvdd.style.color=colors[cIdx];
+    function lp(){
+      if(!dvdRun)return;
+      dvdx+=dvdvx;dvdy+=dvdvy;
+      var r=dvdd.getBoundingClientRect(),b=0;
+      if(r.right>=w-1){dvdvx=-Math.abs(dvdvx);b=1}
+      if(r.left<=0){dvdvx=Math.abs(dvdvx);b=1}
+      if(r.bottom>=h-1){dvdvy=-Math.abs(dvdvy);b=1}
+      if(r.top<=0){dvdvy=Math.abs(dvdvy);b=1}
+      if(b){cIdx=(cIdx+1)%colors.length;dvdd.style.color=colors[cIdx]}
+      dvdd.style.left=dvdx+'px';dvdd.style.top=dvdy+'px';
+      w=window.innerWidth;h=window.innerHeight;
+      dvdAf=requestAnimationFrame(lp)
+    }
+    lp()
+  }
+  document.addEventListener('keydown',function(e){
+    seq=(seq+e.key).slice(-3).toLowerCase();
+    if(seq==='dvd'){seq='';toggleDvd()}
+  });
+})();
+const observer=new IntersectionObserver(function(entries){
+  entries.forEach(function(e){if(e.isIntersecting){e.target.classList.add('visible');observer.unobserve(e.target)}});
+},{threshold:.1});
+document.querySelectorAll('.fade-up').forEach(function(el){observer.observe(el)});
+function initInteractives(){
+  const aS=document.getElementById('aoa-slider'),aV=document.getElementById('aoa-value'),aL=document.getElementById('aoa-lift'),aD=document.getElementById('aoa-drag'),aR=document.getElementById('aoa-ratio'),aO=document.getElementById('aoa-opt'),aArc=document.getElementById('aoa-arc'),aLbl=document.getElementById('aoa-arc-label'),aW=document.getElementById('aoa-wing-group');
+  if(!aS)return;
+  const pA=document.getElementById('pA'),pB=document.getElementById('pB'),pC=document.getElementById('pC'),pAv=document.getElementById('pA-val'),pBv=document.getElementById('pB-val'),pCv=document.getElementById('pC-val'),pOA=document.getElementById('p-opt-angle'),pMR=document.getElementById('p-max-r'),pOL=document.getElementById('p-opt-lift'),pOD=document.getElementById('p-opt-drag'),pL=document.getElementById('param-L'),pD=document.getElementById('param-D'),pR=document.getElementById('param-R'),pMP=document.getElementById('param-max-pt'),pML=document.getElementById('param-max-line');
+  function dx(d,w){return 65+(d/40)*(w-65-60)}
+  function vy(v,mx){return 210-(v/mx)*190}
+  function cv(A,B,C){
+    const st=100,md=40,w=640;let mL=0,mD=0,mR=0;
+    for(let i=0;i<=st;i++){const d=i/st*md,a=d*D,L=A*a,F=B*a*a+C,R=L/F;if(L>mL)mL=L;if(F>mD)mD=F;if(R>mR)mR=R}
+    const aR=Math.sqrt(C/B),aD=aR*TO,lO=A*aR,dO=B*aR*aR+C,rO=lO/dO;
+    let fM=Math.max(mL,mD)*1.15,fS=Math.pow(10,Math.floor(Math.log10(fM||1)));fM=Math.ceil(fM/fS)*fS;if(fM<1)fM=1;
+    let rM=Math.max(mR,rO)*1.2;rM=Math.min(Math.max(rM,5),50);let rS=Math.pow(10,Math.floor(Math.log10(rM)));rM=Math.ceil(rM/rS)*rS;if(rM<5)rM=5;
+    const Lp=[],Dp=[],Rp=[];
+    for(let i=0;i<=st;i++){const d=i/st*md,a=d*D;Lp.push({x:dx(d,w),y:vy(A*a,fM)});Dp.push({x:dx(d,w),y:vy(B*a*a+C,fM)});Rp.push({x:dx(d,w),y:vy(A*a/(B*a*a+C),rM)})}
+    return{Lp,Dp,Rp,aD,lO,dO,rO,fM,rM}
+  }
+  function bp(p){if(!p||!p.length)return'';let d='M'+p[0].x+','+p[0].y;for(let i=1;i<p.length;i++)d+=' L'+p[i].x+','+p[i].y;return d}
+  function uA(){
+    const a=parseFloat(aS.value),A=120,B=15,C=200;
+    aV.innerHTML=a.toFixed(2)+'<span class="u">°</span>';aL.textContent=(A*a).toFixed(2)+' N';aD.textContent=(B*a*a+C).toFixed(2)+' N';aR.textContent=(A*a/(B*a*a+C)).toFixed(2);aO.textContent=(Math.sqrt(C/B)).toFixed(2)+'°';
+    aW.setAttribute('transform','rotate('+a+',320,230)');
+    const ar=a*D;
+    if(a>.5){const r=18,cx=82,cy=230;aArc.setAttribute('d','M'+(cx+r)+','+cy+' A'+r+','+r+' 0 0,1 '+(cx+r*Math.cos(ar)).toFixed(1)+','+(cy+r*Math.sin(ar)).toFixed(1))}else aArc.setAttribute('d','');
+    aLbl.textContent=a.toFixed(2)+'\u00B0';const ma=a*.5*D;aLbl.setAttribute('x',(82+(18+12)*Math.cos(ma)-4).toFixed(1));aLbl.setAttribute('y',(230+(18+12)*Math.sin(ma)+4).toFixed(1));
+  }
+  function uP(){
+    const A=parseFloat(pA.value),B=parseFloat(pB.value),C=parseFloat(pC.value),cur=cv(A,B,C);
+    pAv.textContent=A;pBv.textContent=B;pCv.textContent=C;
+    pL.setAttribute('d',bp(cur.Lp));pD.setAttribute('d',bp(cur.Dp));pR.setAttribute('d',bp(cur.Rp));
+    pOA.innerHTML=cur.aD.toFixed(1)+'°';pMR.textContent=cur.rO.toFixed(2);pOL.textContent=cur.lO.toFixed(2)+' N';pOD.textContent=cur.dO.toFixed(2)+' N';
+    for(let i=1;i<=4;i++){const t=document.getElementById('py'+i),l=document.getElementById('pl'+i);if(t&&l){const v=(i/4)*cur.fM,y=210-(i/4)*190;t.setAttribute('y1',y);t.setAttribute('y2',y);l.setAttribute('y',y+4);l.textContent=Math.round(v)}}
+    const ox=dx(cur.aD,640),oy=vy(cur.rO,cur.rM);
+    pMP.setAttribute('cx',ox.toFixed(1));pMP.setAttribute('cy',oy.toFixed(1));pML.setAttribute('x1',ox.toFixed(1));pML.setAttribute('y1',oy.toFixed(1));pML.setAttribute('x2',ox.toFixed(1));pML.setAttribute('y2',210);
+  }
+  if(aS)aS.addEventListener('input',uA);
+  if(pA){pA.addEventListener('input',uP);pB.addEventListener('input',uP);pC.addEventListener('input',uP)}
+  uA();if(pA)uP();
+}
+setTimeout(initInteractives,100);
+var c=document.getElementById('wind-canvas'),x=c.getContext('2d'),W,H,ps=[],active=0,ex=0,ey=0;
+function rs(){W=c.width=window.innerWidth;H=c.height=window.innerHeight}
+function spawn(n){
+  for(var i=0;i<n;i++){
+    var a=Math.PI*.38+Math.random()*Math.PI*.24,s=.6+Math.random()*2.4;
+    ps.push({x:ex+(Math.random()-.5)*18,y:ey+(Math.random()-.5)*18,vx:Math.cos(a)*s,vy:Math.sin(a)*s*.5+(Math.random()-.5)*.4,o:.12+Math.random()*.22,d:.006+Math.random()*.012,w:.4+Math.random()*2.8,pts:[]})
+  }
+}
+function aw(){
+  x.clearRect(0,0,W,H);
+  if(conf){
+    for(var i=confs.length-1;i>=0;i--){
+      var p=confs[i];p.y+=p.vy;p.x+=p.vx+Math.sin(p.w)*.4;p.w+=p.s;p.o-=.003;
+      if(p.o<=0||p.y>H+30){confs.splice(i,1);continue}
+      x.save();x.translate(p.x,p.y);x.rotate(p.w);
+      x.fillStyle=p.c;x.globalAlpha=p.o;
+      x.fillRect(-p.r,-p.r*.6,p.r*2,p.r*1.2);
+      x.globalAlpha=1;x.restore()
+    }
+  }else{
+    if(active){spawn(3)}
+    for(var i=ps.length-1;i>=0;i--){
+      var p=ps[i];p.x+=p.vx;p.y+=p.vy;p.o-=p.d;
+      p.pts.push({x:p.x,y:p.y});if(p.pts.length>8)p.pts.shift();
+      if(p.o<=0||p.x>W+60||p.y>H+60||p.y<-60){ps.splice(i,1);continue}
+      x.beginPath();for(var j=0;j<p.pts.length;j++)x.lineTo(p.pts[j].x,p.pts[j].y);
+      x.strokeStyle='rgba(230,237,243,'+p.o+')';x.lineWidth=p.w;x.lineCap='round';x.stroke()
+    }
+  }
+  requestAnimationFrame(aw)
+}
+window.addEventListener('resize',rs);
+window.addEventListener('mousemove',function(e){active=1;ex=e.clientX;ey=e.clientY});
+window.addEventListener('mouseleave',function(){active=0});
+window.addEventListener('touchmove',function(e){var t=e.touches[0];if(t){active=1;ex=t.clientX;ey=t.clientY}},{passive:true});
+window.addEventListener('touchend',function(){active=0});
+rs();aw();
+var conf=0,confs=[],confColors=['#ffd700','#ff6b6b','#4ecdc4','#ff9f43','#a29bfe','#fd79a8','#fdcb6e'];
+setInterval(function(){if(conf&&confs.length<400)for(var i=0;i<5;i++)confs.push({x:Math.random()*W,y:-20,r:2+Math.random()*5,vy:.4+Math.random()*1.8,vx:(Math.random()-.5)*1.2,o:.9+Math.random()*.1,c:confColors[Math.floor(Math.random()*confColors.length)],w:Math.random()*Math.PI*2,s:.02+Math.random()*.06})},100);
+var _c=0;
+document.getElementById('logo-trigger').addEventListener('click',function(){_c++;if(_c>=7){_c=0;launchGame()}});
+window.launchGame=function(){
+var o=document.getElementById('game-overlay'),c=document.getElementById('g-c'),x=c.getContext('2d'),
+    px=180,py=240,vx=0,vy=0,sc=0,run=0,end=0,ast=[],bul=[],gconfs=[],fr=0,cd=0,rot=-Math.PI/2,af=0,
+      keys={},active=1;
+  o.classList.add('open');document.getElementById('game-score').textContent='0';document.getElementById('game-start').textContent='press space or click to start';
+  function rs(){if(af){cancelAnimationFrame(af);af=0}ast=[];bul=[];gconfs=[];sc=0;run=0;end=0;fr=0;cd=0;px=180;py=240;vx=0;vy=0;rot=-Math.PI/2;document.getElementById('game-score').textContent='0';document.getElementById('game-start').textContent='press space or click to start';document.getElementById('game-start').style.display='block'}
+  function lp(){
+    if(!active)return;
+    x.clearRect(0,0,360,480);
+    if(!run&&!end){af=requestAnimationFrame(lp);return}
+    if(end){
+      x.fillStyle='rgba(232,81,73,.12)';x.fillRect(0,0,360,480);
+      document.getElementById('game-score').textContent=sc;
+      document.getElementById('game-start').textContent='click to restart';
+      document.getElementById('game-start').style.display='block';
+      af=requestAnimationFrame(lp);
+      return
+    }
+    document.getElementById('game-start').style.display='none';
+    var rs2=0;
+    if(keys['ArrowLeft'])rs2=-.06;
+    if(keys['ArrowRight'])rs2=.06;
+    rot+=rs2;
+    if(keys['ArrowUp']){vx+=Math.cos(rot)*.14;vy+=Math.sin(rot)*.14}
+    if(keys['ArrowDown']){vx-=Math.cos(rot)*.08;vy-=Math.sin(rot)*.08}
+    vx*=.97;vy*=.97;px+=vx;py+=vy;
+    if(px<8||px>352){vx*=-.3;px=px<8?8:352}
+    if(py<8||py>472){vy*=-.3;py=py<8?8:472}
+    if(fr%50==0&&ast.length<8){var a=Math.random()*Math.PI*2,rr=18+Math.random()*22;ast.push({x:180+Math.cos(a)*290,y:240+Math.sin(a)*290,r:rr,vx:-Math.cos(a)*(.15+Math.random()*.25),vy:-Math.sin(a)*(.15+Math.random()*.25)})}
+    if(cd>0)cd--;
+    for(var i=bul.length-1;i>=0;i--){var b=bul[i];b.x+=b.vx;b.y+=b.vy;if(b.x<-10||b.x>370||b.y<-10||b.y>490){bul.splice(i,1);continue}
+      x.fillStyle='#58a6ff';x.beginPath();x.arc(b.x,b.y,3,0,Math.PI*2);x.fill();
+      x.fillStyle='rgba(88,166,255,.3)';x.beginPath();x.arc(b.x,b.y,7,0,Math.PI*2);x.fill()}
+    for(var i=ast.length-1;i>=0;i--){var a=ast[i];a.x+=a.vx;a.y+=a.vy;if(a.x<-80||a.x>440||a.y<-80||a.y>560){ast.splice(i,1);continue}
+      for(var j=bul.length-1;j>=0;j--){var b=bul[j],dd=(a.x-b.x)*(a.x-b.x)+(a.y-b.y)*(a.y-b.y);if(dd<a.r*a.r){sc++;document.getElementById('game-score').textContent=sc;if(sc>=100&&!document.documentElement.classList.contains('gold-theme')){document.documentElement.classList.add('gold-theme');conf=1;for(var k=0;k<80;k++){var ca=Math.random()*Math.PI*2,cs=.5+Math.random()*3;gconfs.push({x:a.x,y:a.y,vx:Math.cos(ca)*cs,vy:Math.sin(ca)*cs-1,r:1.5+Math.random()*3,c:['#ffd700','#ff6b6b','#4ecdc4','#ff9f43','#a29bfe','#fdcb6e'][Math.floor(Math.random()*6)],o:1,d:.005+Math.random()*.01,w:Math.random()*Math.PI*2,s:.03+Math.random()*.08})}};ast.splice(i,1);bul.splice(j,1);break}}
+      x.strokeStyle='rgba(88,166,255,.5)';x.lineWidth=1.5;x.beginPath();x.arc(a.x,a.y,a.r,0,Math.PI*2);x.stroke();
+      x.strokeStyle='rgba(88,166,255,.1)';x.lineWidth=1;x.beginPath();x.arc(a.x,a.y,a.r*1.5,0,Math.PI*2);x.stroke();
+      if(!end){var dd=(a.x-px)*(a.x-px)+(a.y-py)*(a.y-py);if(dd<(a.r+10)*(a.r+10)){end=1;setTimeout(rs,1500)}}}
+    for(var i=gconfs.length-1;i>=0;i--){var p=gconfs[i];p.x+=p.vx;p.y+=p.vy;p.vy+=.02;p.o-=p.d;p.w+=p.s;if(p.o<=0){gconfs.splice(i,1);continue}x.save();x.translate(p.x,p.y);x.rotate(p.w);x.globalAlpha=p.o;x.fillStyle=p.c;x.fillRect(-p.r,-p.r*.6,p.r*2,p.r*1.2);x.globalAlpha=1;x.restore()}
+    x.save();x.translate(px,py);x.rotate(rot);
+    x.fillStyle='#e6edf3';x.beginPath();x.moveTo(16,0);x.lineTo(-8,-8);x.lineTo(-4,0);x.lineTo(-8,8);x.closePath();x.fill();
+    x.fillStyle='rgba(88,166,255,.3)';x.beginPath();x.arc(0,0,14,0,Math.PI*2);x.stroke();
+    x.restore();
+    fr++;af=requestAnimationFrame(lp)
+  }
+  function shoot(){if(!active||!o.classList.contains('open'))return;if(end){rs();setTimeout(function(){run=1;lp()},100);return}if(!run){run=1;lp();return}if(cd==0){bul.push({x:px,y:py,vx:Math.cos(rot)*7,vy:Math.sin(rot)*7});cd=10}}
+  function kd(e){keys[e.code]=1;if(e.code==='Space'){e.preventDefault();shoot()}}
+  function ku(e){keys[e.code]=0}
+  document.addEventListener('keydown',kd);document.addEventListener('keyup',ku);
+  c.addEventListener('click',shoot);
+  c.addEventListener('touchstart',function(e){e.preventDefault();shoot()},{passive:!1});
+  c.oncontextmenu=function(){return!1};
+  window.__closeGame=function(){active=0;document.removeEventListener('keydown',kd);document.removeEventListener('keyup',ku);o.classList.remove('open')};
+  rs()
+};
+window.closeGame=function(){if(window.__closeGame)window.__closeGame()};
+})();
+</script>
+
+</body>
+</html>
